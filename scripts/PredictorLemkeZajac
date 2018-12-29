@@ -1,0 +1,123 @@
+# import all required libraries here
+import sys
+import getopt
+from rdkit import Chem
+import sklearn
+import itertools
+from rdkit import DataStructs
+from rdkit.Chem.Fingerprints import FingerprintMols
+from rdkit.Chem import Descriptors
+from rdkit.ML.Descriptors import MoleculeDescriptors
+import numpy as np
+from sklearn.cluster import AgglomerativeClustering
+from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
+import matplotlib.pyplot as plt
+from sklearn.metrics import davies_bouldin_score
+from xgboost import XGBClassifier
+from sklearn.model_selection import cross_val_score # TODO check version and extension possibilities
+
+__author__ = 'Steffen Lemke'
+
+
+# Parses all SMILES of the input file
+# Returns Python lists of IDs, SMILES and RDKit molecules
+def parse_input(filename=str):
+    orig_smiles = list()
+    molecules = list()
+    activity =  list ()
+    ids = list()
+
+    with open(filename, 'r') as f:
+        for line in f:
+            split = line.split('\t')
+            smile = split[0].replace('"', '')
+            mol = Chem.MolFromSmiles(smile)
+            class_label = int(split[1].split('\n')[0].rstrip())
+            if mol is not None:
+                orig_smiles.append(smile.rstrip())
+                molecules.append(Chem.MolFromSmiles(smile))
+                if class_label == 1:
+                    activity.append(class_label)
+                else:
+                    activity.append(0)
+        for i in range(1, len(molecules)+1):
+            ids.append(i)
+
+    return ids, orig_smiles, molecules, activity
+
+
+
+def generate_feature_vector(molecules):
+    names_descriptors = [x[0] for x in Descriptors._descList]
+    my_desc_obj = MoleculeDescriptors.MolecularDescriptorCalculator(names_descriptors)
+    feature_vector = [my_desc_obj.CalcDescriptors(x) for x in molecules]
+    return feature_vector
+
+
+
+
+
+def XGB_feature_importance(classifier, feature_vector, labels):
+    score = cross_val_score(classifier, np.asarray(feature_vector), np.asarray(labels), cv=10, scoring='f1')
+    print(score)
+
+
+
+
+def write_output(ids, orig_smiles, cluster_labels, output):
+    with open(output, 'w') as f:
+        for id, smrt, label in zip(ids, orig_smiles, cluster_labels):
+            f.write('\t'.join([str(id), smrt, str(label)]) + '\n')
+
+
+# Example command
+# python project.py -i training_data.csv -o output_assignment6_Steffen_Lemke.txt
+
+def main(argv):
+    print('QSAR Project')
+    print('Author: ' + __author__)
+
+    help_string = "Command line example: \npython project.py -i <input_pmcsath> " \
+                  "-o <output_path>"
+    input = ""
+    output = ""
+    try:
+        opts, args = getopt.getopt(argv, "hi:o:", ["help", "input=", "output="])
+    except getopt.GetoptError:
+        print(help_string)
+        sys.exit()
+    for o, a in opts:
+        if a == '' or o == '':
+            print(help_string)
+            sys.exit()
+        elif o in ("-h", "--help"):
+            print(help_string)
+            sys.exit()
+        elif o in ("-i", "--input"):
+            input = a
+        elif o in ("-o", "--output"):
+            output = a
+
+
+    # Parse the input file to generate a list of RDKit molecules
+    ids, orig_smiles, molecules, activity = parse_input(input)
+
+    # Generate feature vector
+    feature_vector = generate_feature_vector(molecules)
+    print(sorted(sklearn.metrics.SCORERS.keys()))
+    print(activity)
+
+    # Classifier
+    classifier = XGBClassifier(seed=1)
+
+    # cross validation
+    XGB_feature_importance(classifier, feature_vector, activity)
+
+
+
+    # Write the combined ids, smarts, number of atoms and bonds to output file
+    # write_output(ids, orig_smiles, cluster_labels, output)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

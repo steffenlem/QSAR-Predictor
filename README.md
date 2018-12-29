@@ -6,8 +6,8 @@ This powerful QSAR predictor was developed during the research project of the Ch
 Quick Setup
 =====
 1. <code>$ git clone https://github.com/steffenlem/QSAR_predictor_Lemke_Zajac</code>
-2. <code>$ conda env create -f environment.yml -n emberenv</code>
-3. <code>$ source activate emberenv</code>
+2. <code>$ conda env create -f environment.yml -n qsar-lemke-zajac</code>
+3. <code>$ source activate qsar-lemke-zajac</code>
 4. <code>$ python setup.py install</code> 
 5. <code>$ QSAR_predictor_Lemke_Zajac</code>
 
@@ -21,6 +21,16 @@ Usage
 ```
 $ QSAR_predictor_Lemke_Zajac --help
 Options:
+
+
+Options:
+  -i, --input	 <arg>         	path to input file  [required]
+  -o, --output	 <arg> 		path to output file [required]
+  --help			Show this message and exit.
+
+
+
+
 
 
 ```

@@ -5,7 +5,7 @@ This powerful QSAR predictor was developed during the research project of the Ch
 
 Quick Setup
 =====
-1. <code>$ git clone https://github.com/steffenlem/QSAR_predictor_Lemke_Zajac</code>
+1. <code>$ git clone https://github.com/steffenlem/QSAR-Predictor.git</code>
 2. <code>$ conda env create -f environment.yml -n qsar-lemke-zajac</code>
 3. <code>$ source activate qsar-lemke-zajac</code>
 4. <code>$ python setup.py install</code> 

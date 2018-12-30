@@ -22,7 +22,7 @@ setup(
     author='Steffen Lemke, Thomas Zajac',
     author_email='steffen.lemke@student.uni-tuebingen.de',
     license=license,
-    scripts=['scripts/PredictorLemkeZajac'],
+    scripts=['scripts/PredictorLemkeZajac.py'],
     install_requires=required,
     packages=find_packages(exclude='docs'),
     include_package_data=True,

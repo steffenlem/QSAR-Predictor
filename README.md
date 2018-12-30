@@ -9,7 +9,7 @@ Quick Setup
 2. <code>$ conda env create -f environment.yml -n qsar-lemke-zajac</code>
 3. <code>$ source activate qsar-lemke-zajac</code>
 4. <code>$ python setup.py install</code> 
-5. <code>$ QSAR_predictor_Lemke_Zajac</code>
+5. <code>$ PredictorLemkeZajac</code>
 
 
 
@@ -19,7 +19,7 @@ Usage
 ## The CLI - Command Line Interface
 
 ```
-$ QSAR_predictor_Lemke_Zajac --help
+$ PredictorLemkeZajac.py --help
 Options:
 
 
@@ -40,7 +40,7 @@ Examples
 =====
 Example command:    
 ```
-QSAR_predictor_Lemke_Zajac -i <input_file_path> -o <output_file_path>     
+PredictorLemkeZajac.py -i <input_file_path> -o <output_file_path>     
 ```
 
   

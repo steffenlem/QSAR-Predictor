@@ -19,7 +19,6 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.feature_selection import RFECV
 import pandas as pd
 
-
 __author__ = 'Steffen Lemke'
 
 
@@ -57,12 +56,12 @@ def generate_feature_vector(molecules):
     return feature_vector
 
 
-def XGB_feature_importance(classifier, feature_vector, labels):
+def my_cross_validation(classifier, feature_vector, labels):
     scoring = {'F1': 'f1',
                'Accuracy': 'accuracy',
                'ROC_AUC': 'roc_auc'}
 
-    scores = cross_validate(classifier, np.asarray(feature_vector), np.asarray(labels), cv=10, scoring=scoring)
+    scores = cross_validate(classifier, feature_vector, labels, cv=10, scoring=scoring)
     # print("F1 Score: " + str(score.mean()) + " +- " + str(score.std()))
     # print(scores[test_])
     for key in scoring.keys():
@@ -76,14 +75,13 @@ def write_output(ids, orig_smiles, cluster_labels, output):
             f.write('\t'.join([str(id), smrt, str(label)]) + '\n')
 
 
-
 def recursive_feature_elimination(classifier, feature_vector, labels):
     rfecv = RFECV(estimator=classifier, step=1, cv=StratifiedKFold(3), scoring='f1', n_jobs=-1)
-    rfecv.fit(feature_vector, np.asarray(labels))
+    rfecv.fit(feature_vector, labels)
 
     print("Optimal number of features : %d" % rfecv.n_features_)
-    print("Mask of selected features :")
-    print(rfecv.support_)
+    # print("Mask of selected features :")
+    # print(rfecv.support_)
 
     # Plot number of features VS. cross-validation scores
     plt.figure()
@@ -92,9 +90,11 @@ def recursive_feature_elimination(classifier, feature_vector, labels):
     plt.plot(range(1, len(rfecv.grid_scores_) + 1), rfecv.grid_scores_)
     plt.show()
 
+    names_descriptors = np.asarray([x[0] for x in Descriptors._descList])
+    important_features = np.asarray(names_descriptors)[rfecv.support_]
+    # print(important_features)
 
-
-
+    return rfecv.support_
 
 
 # Example command
@@ -133,38 +133,27 @@ def main(argv):
 
     # Generate feature vector
     feature_vector = generate_feature_vector(molecules)
-    print(sorted(sklearn.metrics.SCORERS.keys()))
-    # print(activity)
+    feature_vector = np.asarray(feature_vector)
+    feature_vector[np.isnan(feature_vector)] = 0
+
+    activity = np.asarray(activity)
+    # print(sorted(sklearn.metrics.SCORERS.keys()))
 
     # Classifier
     classifier = XGBClassifier(seed=1)
 
-    # cross validation
-    #XGB_feature_importance(classifier, feature_vector, activity)
+
+    my_cross_validation(classifier, feature_vector, activity)
 
 
 
-    #a = np.where(np.asarray(feature_vector).values >= np.finfo(np.float64).max)
-
-    feature_vector = np.asarray(feature_vector)
-
-
-    feature_vector[np.isnan(feature_vector)] = 0
-
-
-    #a = pd.DataFrame(feature_vector)
-    #a = np.where(a.values >= np.finfo(np.float64).max)
-
-    #print(np.isnan(a.values.any()))
-
-
-
-
-
-    #print(np.where(np.isnan(feature_vector)))
 
     # Recursive feature elimination
-    recursive_feature_elimination(classifier, feature_vector, activity)
+    feature_mask = recursive_feature_elimination(classifier, feature_vector, activity)
+
+    print(feature_mask)
+    #feature_vector = feature_vector[:, np.asarray(feature_mask)]
+    #print(feature_vector)
 
 
 

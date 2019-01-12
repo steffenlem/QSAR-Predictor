@@ -9,7 +9,7 @@ Quick Setup
 2. <code>$ conda env create -f environment.yml -n qsar-lemke-zajac</code>
 3. <code>$ source activate qsar-lemke-zajac</code>
 4. <code>$ python setup.py install</code> 
-5. <code>$ PredictorLemkeZajac</code>
+5. <code>$ PredictorLemkeZajac.py</code>
 
 
 
@@ -24,8 +24,8 @@ Options:
 
 
 Options:
-  -i, --input	 <arg>         	path to input file  [required]
-  -o, --output	 <arg> 		path to output file [required]
+  -i, --input	 <arg>         	path to input file of the data to predict  [required]
+  -o, --output	 <arg> 		path to output file of the data to predict [required]
   --help			Show this message and exit.
 
 
@@ -40,7 +40,7 @@ Examples
 =====
 Example command:    
 ```
-PredictorLemkeZajac.py -i <input_file_path> -o <output_file_path>     
+PredictorLemkeZajac.py -i <input_prediction_data> -o <output_prediction_data>     
 ```
 
   

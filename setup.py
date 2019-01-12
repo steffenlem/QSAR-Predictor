@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-version = '0.1'
+version = '1.0'
 
 with open('README.md') as f:
     readme = f.read()
@@ -20,7 +20,7 @@ setup(
     long_description=readme,
     keywords=['QSAR'],
     author='Steffen Lemke, Thomas Zajac',
-    author_email='steffen.lemke@student.uni-tuebingen.de',
+    author_email='steffen.lemke@student.uni-tuebingen.de, thomas.zajac@student.uni-tuebingen.de',
     license=license,
     scripts=['scripts/PredictorLemkeZajac.py'],
     install_requires=required,

@@ -1,15 +1,17 @@
 # import all required libraries here
-import sys
+
 import getopt
+import numpy as np
+import os
+import sys
+
 from rdkit import Chem
+from rdkit.Chem import Descriptors
 from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
 from rdkit.Chem.AllChem import GetHashedAtomPairFingerprintAsBitVect
 from rdkit.ML.Descriptors import MoleculeDescriptors
-from rdkit.Chem import Descriptors
-import numpy as np
-from xgboost import XGBClassifier
-
 from sklearn.metrics import *
+from xgboost import XGBClassifier
 
 __author__ = 'Steffen Lemke & Thomas Zajac'
 
@@ -17,6 +19,9 @@ __author__ = 'Steffen Lemke & Thomas Zajac'
 # Parses all SMILES of the input file
 # Returns Python lists of IDs, SMILES and RDKit molecules
 def parse_input(filename=str):
+    if not os.path.isfile(filename):
+        print(f"Path to input file does not point to a file:  {filename}", sys.stderr)
+        exit(-1)
     orig_smiles = list()
     molecules = list()
     activity = list()
@@ -28,13 +33,15 @@ def parse_input(filename=str):
             smile = split[0].replace('"', '')
             mol = Chem.MolFromSmiles(smile)
             class_label = int(split[1].split('\n')[0].rstrip())
-            if mol is not None:
+            if mol:
                 orig_smiles.append(smile.rstrip())
                 molecules.append(Chem.MolFromSmiles(smile))
                 if class_label == 1:
                     activity.append(class_label)
                 else:
                     activity.append(0)
+            else:
+                print(f"Skipping molecule for SMILES {smile}, as RDKit could not parse it.")
         for i in range(1, len(molecules) + 1):  # generate IDs
             ids.append(i)
     # to np array
@@ -48,12 +55,12 @@ def final_predictor(molecules_train, activity_train, molecules_test):
     # Default Classifier
     clf = XGBClassifier(random_state=1, n_jobs=-1)
 
-    # Generate feature vector training (80%)
+    # Generate feature vector for the training data
     feature_vector_for_train = generate_initial_feature_vector(molecules_train, activity_train)
     feature_vector_train = select_most_important_features(clf, feature_vector_for_train, 103, activity_train,
                                                           feature_vector_for_train)
 
-    # Generate feature vector testing (20%)
+    # Generate feature vector for the data to be predicted
     feature_vector_test = generate_initial_feature_vector(molecules_train, activity_train, molecules_test)
     feature_vector_test = select_most_important_features(clf, feature_vector_for_train.copy(), 103, activity_train,
                                                          feature_vector_test)
@@ -74,7 +81,6 @@ def feature_fingerprint_morgan(molecules, radius, bits):
     feature_vector = []
 
     for mol in molecules:
-        # feature_vector.append(AllChem.GetMorganFingerprint(mol, 3))
         # radius 3 equals ecpf6 https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4510302/
         string_bits = GetMorganFingerprintAsBitVect(mol, radius, nBits=bits).ToBitString()
         feature_vector.append(list(map(int, string_bits)))
@@ -114,7 +120,7 @@ def generate_initial_feature_vector(molecules_1, activity, molecules_2=None):
         # Generate feature vector
         feature_vector = generate_molecular_descriptors(d)
 
-        # ECFP6 feature vector
+        # ECFP8 feature vector
         ecfp8 = np.asarray(feature_fingerprint_morgan(d, 4, 4096))
 
         # linear fingerprints feature vector (Atom pair=
@@ -157,8 +163,8 @@ def calculate_scores(y_true, y_pred):
     print("SP:\t" + str(my_specificity_score(y_true, y_pred)))
     print("ROCAUC:\t" + str(roc_auc_score(y_true, y_pred)))
 
-    # specificity scoring function
 
+# specificity scoring function
 def my_specificity_score(labels, predictions):
     tp = fp = tn = fn = 0
     for x in range(len(labels)):
@@ -172,8 +178,6 @@ def my_specificity_score(labels, predictions):
             fp += 1
     score = tn / (tn + fp)
     return score
-
-
 
 
 # Write Output with original labels and predicted labels
@@ -194,13 +198,13 @@ def main(argv):
     print('QSAR Project')
     print('Author: ' + __author__)
 
-    help_string = "Command line example: \nPredictorLemkeZajac.py -i <input_prediction_data> " \
+    help_string = "Command line example: \nPredictorLemkeZajac.py -i <input_data_to_be_predicted> " \
                   "-o <output_prediction_data>"
     my_input = ""
     my_output = ""
     try:
         opts, args = getopt.getopt(argv, "hi:o:", ["help", "input=", "output="])
-        if opts == []:
+        if not opts:
             print(help_string)
             sys.exit()
     except getopt.GetoptError:
@@ -219,9 +223,8 @@ def main(argv):
             my_output = a
 
     # Parse the training data to generate a list of RDKit molecules
-    ids_train, orig_smiles_train, molecules_train, activity_train = parse_input("data/training_data.csv")
-
-    print("asdf")
+    ids_train, orig_smiles_train, molecules_train, activity_train = parse_input(
+        os.path.join("data", "training_data.csv"))
 
     # Parse the prediction data to generate a list of RDKit molecules
     ids_predict, orig_smiles_predict, molecules_test, activity_test = parse_input(my_input)

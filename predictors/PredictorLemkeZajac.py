@@ -36,6 +36,8 @@ def parse_input(filename=str):
     with open(filename, 'r') as f:
         for line in f:
             split = line.split('\t')
+            if len(split) == 1:  # Catches the case of empty lines
+                continue
             smile = split[0].replace('"', '')
             mol = Chem.MolFromSmiles(smile)
             class_label = int(split[1].split('\n')[0].rstrip())

@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
-import sys
-sys.path.append(".")
-print(sys.path)
 
 version = '1.0'
 

@@ -1,4 +1,4 @@
-name: LemkeZajacQSAR
+name: qsar-lemke-zajac
 channels:
   - rdkit
   - conda-forge
